@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ShiftAssistant from './components/ShiftAssistant';
 import Chart from 'chart.js/auto';
-import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, writeBatch } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query } from 'firebase/firestore';
 import { initializeApp } from 'firebase/app';
 import {
   getAuth,
@@ -87,16 +87,15 @@ function App() {
   const [hiyarihats, setHiyarihats] = useState([]);
   const [formData, setFormData] = useState({ date: '', time: '', location: '', incidentType: HiyarihatType.FALL, description: '', cause: '', measures: '', reporter: ReporterType.CARE_STAFF, impactLevel: ImpactLevel.LEVEL_0 });
   const [editingId, setEditingId] = useState(null);
+  // eslint-disable-next-line no-unused-vars
   const [showModal, setShowModal] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [modalMessage, setModalMessage] = useState('');
+  // eslint-disable-next-line no-unused-vars
   const [modalType, setModalType] = useState('');
+  // eslint-disable-next-line no-unused-vars
   const [confirmAction, setConfirmAction] = useState(null);
-  const [selectedIds, setSelectedIds] = useState([]);
-  const [printStartDate, setPrintStartDate] = useState('');
-  const [printEndDate, setPrintEndDate] = useState('');
-  const [statsMonth, setStatsMonth] = useState(new Date().toISOString().slice(0, 7));
-  const [csvMonth, setCsvMonth] = useState(new Date().toISOString().slice(0, 7));
-  const [isImporting, setIsImporting] = useState(false);
+  const [statsMonth] = useState(new Date().toISOString().slice(0, 7));
 
   const [isGenerating, setIsGenerating] = useState(false); // ★AI生成中のローディング状態
   const [appMode, setAppMode] = useState('hiyarihat'); // 'hiyarihat' | 'shift'
@@ -125,7 +124,9 @@ function App() {
   const handleLogout = async () => { try { await signOut(auth); } catch (error) { console.error("ログアウトエラー", error); showCustomModal('ログアウトに失敗しました。', 'info'); } };
   const resetForm = () => setFormData({ date: '', time: '', location: '', incidentType: HiyarihatType.FALL, description: '', cause: '', measures: '', reporter: ReporterType.CARE_STAFF, impactLevel: ImpactLevel.LEVEL_0 });
   const handleSubmit = async (e) => { e.preventDefault(); if (!user) return; const userId = user.uid; try { if (editingId) { await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/hiyarihats`, editingId), formData); showCustomModal('更新しました！', 'info'); setEditingId(null); } else { await addDoc(collection(db, `artifacts/${appId}/users/${userId}/hiyarihats`), formData); showCustomModal('保存しました！', 'info'); } resetForm(); } catch (e) { console.error("保存/更新エラー", e); showCustomModal('エラー: 保存または更新に失敗しました。', 'info'); } };
+  // eslint-disable-next-line no-unused-vars
   const handleEdit = (hiyarihat) => { setFormData(hiyarihat); setEditingId(hiyarihat.id); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  // eslint-disable-next-line no-unused-vars
   const handleDelete = (id) => { setModalType('confirm'); setModalMessage('本当にこのヒヤリハットを削除しますか？'); setConfirmAction(() => async () => { if (!user) return; const userId = user.uid; try { await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/hiyarihats`, id)); showCustomModal('削除しました！', 'info'); } catch (e) { console.error("削除エラー", e); showCustomModal('エラー: 削除に失敗しました。', 'info'); } finally { closeModal(); } }); setShowModal(true); };
   const showCustomModal = (message, type) => { setModalMessage(message); setModalType(type); setShowModal(true); };
   const closeModal = () => { setShowModal(false); setModalMessage(''); setModalType(''); setConfirmAction(null); };
